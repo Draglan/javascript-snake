@@ -33,6 +33,11 @@ let stopped = false;
 let updateIntervalId = -1;
 let timerId = -1;
 
+// store direction changes in a queue so the snake does
+// what the user expects: direction is updated at beginning of
+// each frame, not immediately after key press
+let directionChangeQueue = new Array();
+
 // clear the canvas
 function clear() {
     ctx.fillStyle = 'darkgreen';
@@ -71,14 +76,11 @@ function updateAndDraw() {
 
 // update the game state
 function update() {
-    let findSnakeCoord = function() {
-        for (let i = 0; i < snake.length; ++i) {
-            if (this[0] === snake[i][0] && this[1] === snake[i][1]) {
-                return true;
-            }
-        }
-        return false;
-    };
+    // change snake direction
+    if (directionChangeQueue.length > 0) {
+        direction = directionChangeQueue[0];
+        directionChangeQueue.shift();
+    }
 
     const delta = {
         [NONE]: [0,0],
@@ -91,6 +93,15 @@ function update() {
     // move the snake
     let x = snake[0][0] + delta[direction][0];
     let y = snake[0][1] + delta[direction][1];
+    
+    let findSnakeCoord = function() {
+        for (let i = 0; i < snake.length; ++i) {
+            if (this[0] === snake[i][0] && this[1] === snake[i][1]) {
+                return true;
+            }
+        }
+        return false;
+    };
 
     // check if the snake is about to collide with itself
     if (direction !== NONE) {
@@ -201,7 +212,8 @@ window.addEventListener("keydown", function(event){
         }
 
         if (dirs[event.key] !== opposites[direction] || snake.length === 1){
-            direction = dirs[event.key];
+            //direction = dirs[event.key];
+            directionChangeQueue.push(dirs[event.key]);
         }
     }
 });
